@@ -20,12 +20,12 @@ which is included as part of this source code package.
 #include <mutex>
 #include <omp.h>
 #include <pcl/common/io.h>
-#include <ros/ros.h>
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h>
+
+#include <fins/node.hpp>
+#include <fins/agent/parameter_server.hpp>
 
 #define VOXELMAP_HASH_P 116101
 #define VOXELMAP_MAX_N 10000000000
@@ -182,7 +182,7 @@ public:
   VoxelOctoTree *Insert(const pointWithVar &pv);
 };
 
-void loadVoxelConfig(ros::NodeHandle &nh, VoxelMapConfig &voxel_config);
+void loadVoxelConfig(VoxelMapConfig &voxel_config);
 
 class VoxelMapManager
 {
@@ -190,7 +190,6 @@ public:
   VoxelMapManager() = default;
   VoxelMapConfig config_setting_;
   int current_frame_id_ = 0;
-  ros::Publisher voxel_map_pub_;
   std::unordered_map<VOXEL_LOCATION, VoxelOctoTree *> voxel_map_;
 
   PointCloudXYZI::Ptr feats_undistort_;
@@ -208,7 +207,7 @@ public:
 
   V3D last_slide_position = {0,0,0};
 
-  geometry_msgs::Quaternion geoQuat_;
+  geometry_msgs::msg::Quaternion geoQuat_;
 
   int feats_down_size_;
   int effct_feat_num_;
@@ -240,17 +239,13 @@ public:
   void build_single_residual(pointWithVar &pv, const VoxelOctoTree *current_octo, const int current_layer, bool &is_sucess, double &prob,
                              PointToPlane &single_ptpl);
 
-  void pubVoxelMap();
-
   void mapSliding();
   void clearMemOutOfMap(const int& x_max,const int& x_min,const int& y_max,const int& y_min,const int& z_max,const int& z_min );
 
 private:
   void GetUpdatePlane(const VoxelOctoTree *current_octo, const int pub_max_voxel_layer, std::vector<VoxelPlane> &plane_list);
 
-  void pubSinglePlane(visualization_msgs::MarkerArray &plane_pub, const std::string plane_ns, const VoxelPlane &single_plane, const float alpha,
-                      const Eigen::Vector3d rgb);
-  void CalcVectQuation(const Eigen::Vector3d &x_vec, const Eigen::Vector3d &y_vec, const Eigen::Vector3d &z_vec, geometry_msgs::Quaternion &q);
+  void CalcVectQuation(const Eigen::Vector3d &x_vec, const Eigen::Vector3d &y_vec, const Eigen::Vector3d &z_vec, geometry_msgs::msg::Quaternion &q);
 
   void mapJet(double v, double vmin, double vmax, uint8_t &r, uint8_t &g, uint8_t &b);
 };

@@ -1,4 +1,4 @@
-# FAST-LIVO2
+# FAST-LIVO2 (Adapted to FINS Framework)
 
 ## FAST-LIVO2: Fast, Direct LiDAR-Inertial-Visual Odometry
 

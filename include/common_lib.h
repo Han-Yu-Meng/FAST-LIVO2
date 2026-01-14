@@ -17,9 +17,10 @@ which is included as part of this source code package.
 #include <utils/types.h>
 #include <utils/color.h>
 #include <opencv2/opencv.hpp>
-#include <sensor_msgs/Imu.h>
+#include <sensor_msgs/msg/imu.hpp>
 #include <sophus/se3.h>
-#include <tf/transform_broadcaster.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 using namespace std;
 using namespace Eigen;
@@ -63,7 +64,7 @@ struct MeasureGroup
 {
   double vio_time;
   double lio_time;
-  deque<sensor_msgs::Imu::ConstPtr> imu;
+  deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu;
   cv::Mat img;
   MeasureGroup()
   {
@@ -240,5 +241,30 @@ auto set_pose6d(const double t, const Matrix<T, 3, 1> &a, const Matrix<T, 3, 1> 
   // Map<M3D>(rot_kp.rot, 3,3) = R;
   return move(rot_kp);
 }
+
+inline rclcpp::Time get_wall_time() {
+  static rclcpp::Clock clock(RCL_SYSTEM_TIME); 
+  return clock.now();
+}
+
+
+inline rclcpp::Time get_ros_time(double timestamp) {
+  int32_t sec = std::floor(timestamp);
+  auto nanosec_d = (timestamp - std::floor(timestamp)) * 1e9;
+  uint32_t nanosec = nanosec_d;
+  return rclcpp::Time(sec, nanosec);
+}
+
+inline double toSec(const rclcpp::Time &time) {
+  return time.seconds();
+}
+
+inline rclcpp::Time toRclTime(double timestamp) {
+  int32_t sec = std::floor(timestamp);
+  auto nanosec_d = (timestamp - std::floor(timestamp)) * 1e9;
+  uint32_t nanosec = nanosec_d;
+  return rclcpp::Time(sec, nanosec);
+}
+
 
 #endif

@@ -17,50 +17,63 @@ which is included as part of this source code package.
 #include "vio.h"
 #include "preprocess.h"
 #include <cv_bridge/cv_bridge.h>
-#include <image_transport/image_transport.h>
-#include <nav_msgs/Path.h>
+#include <nav_msgs/msg/path.hpp>
 #include <vikit/camera_loader.h>
+
+#include <fins/node.hpp>
+#include <fins/agent/parameter_server.hpp>
 
 class LIVMapper
 {
 public:
-  LIVMapper(ros::NodeHandle &nh);
+  using OdometryCallback = std::function<void()>;
+
+  void setIMUPropagateCallback(OdometryCallback cb) { cb_imu_propagate_ = cb; }
+  void setOdometryCallback(OdometryCallback cb) { cb_odometry_ = cb; }  
+  
+  OdometryCallback cb_imu_propagate_;
+  OdometryCallback cb_odometry_;
+
+public:
+  LIVMapper(fins::Node* fins_node_);
   ~LIVMapper();
-  void initializeSubscribersAndPublishers(ros::NodeHandle &nh, image_transport::ImageTransport &it);
   void initializeComponents();
-  void initializeFiles();
-  void run();
+  void trigger();
   void gravityAlignment();
   void handleFirstFrame();
   void stateEstimationAndMapping();
   void handleVIO();
   void handleLIO();
-  void savePCD();
   void processImu();
   
   bool sync_packages(LidarMeasureGroup &meas);
   void prop_imu_once(StatesGroup &imu_prop_state, const double dt, V3D acc_avr, V3D angvel_avr);
-  void imu_prop_callback(const ros::TimerEvent &e);
+  // void imu_prop_callback(const ros::TimerEvent &e);
   void transformLidar(const Eigen::Matrix3d rot, const Eigen::Vector3d t, const PointCloudXYZI::Ptr &input_cloud, PointCloudXYZI::Ptr &trans_cloud);
   void pointBodyToWorld(const PointType &pi, PointType &po);
   void RGBpointBodyLidarToIMU(PointType const *const pi, PointType *const po);
   void RGBpointBodyToWorld(PointType const *const pi, PointType *const po);
-  void standard_pcl_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg);
-  void livox_pcl_cbk(const livox_ros_driver::CustomMsg::ConstPtr &msg_in);
-  void imu_cbk(const sensor_msgs::Imu::ConstPtr &msg_in);
-  void img_cbk(const sensor_msgs::ImageConstPtr &msg_in);
-  void publish_img_rgb(const image_transport::Publisher &pubImage, VIOManagerPtr vio_manager);
-  void publish_frame_world(const ros::Publisher &pubLaserCloudFullRes, VIOManagerPtr vio_manager);
-  void publish_visual_sub_map(const ros::Publisher &pubSubVisualMap);
-  void publish_effect_world(const ros::Publisher &pubLaserCloudEffect, const std::vector<PointToPlane> &ptpl_list);
-  void publish_odometry(const ros::Publisher &pubOdomAftMapped);
-  void publish_mavros(const ros::Publisher &mavros_pose_publisher);
-  void publish_path(const ros::Publisher pubPath);
-  void readParameters(ros::NodeHandle &nh);
+
+  void push_imu(const sensor_msgs::msg::Imu::ConstSharedPtr& msg);
+  void push_lidar(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg);
+  void push_livox(const livox_ros_driver2::msg::CustomMsg::ConstSharedPtr& msg);
+  void push_img(const sensor_msgs::msg::Image::ConstSharedPtr& msg);
+
+  void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg);
+  void livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::ConstSharedPtr &msg_in);
+  void imu_cbk(const sensor_msgs::msg::Imu::ConstSharedPtr &msg_in);
+  void img_cbk(const sensor_msgs::msg::Image::ConstSharedPtr &msg_in);
+
+  void publish_frame_world(VIOManagerPtr vio_manager);
+  void publish_odometry();
+  void publish_path();
+  void publish_tf();
+
+  void readParameters();
   template <typename T> void set_posestamp(T &out);
   template <typename T> void pointBodyToWorld(const Eigen::Matrix<T, 3, 1> &pi, Eigen::Matrix<T, 3, 1> &po);
   template <typename T> Eigen::Matrix<T, 3, 1> pointBodyToWorld(const Eigen::Matrix<T, 3, 1> &pi);
-  cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg);
+  cv::Mat getImageFromMsg(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg);
 
   std::mutex mtx_buffer, mtx_buffer_imu_prop;
   std::condition_variable sig_buffer;
@@ -69,7 +82,7 @@ public:
   std::unordered_map<VOXEL_LOCATION, VoxelOctoTree *> voxel_map;
   
   string root_dir;
-  string lid_topic, imu_topic, seq_name, img_topic;
+  string lid_topic, imu_topic, seq_name;
   V3D extT;
   M3D extR;
 
@@ -91,11 +104,10 @@ public:
   StatesGroup imu_propagate, latest_ekf_state;
 
   bool new_imu = false, state_update_flg = false, imu_prop_enable = true, ekf_finish_once = false;
-  deque<sensor_msgs::Imu> prop_imu_buffer;
-  sensor_msgs::Imu newest_imu;
+  deque<sensor_msgs::msg::Imu> prop_imu_buffer;
+  sensor_msgs::msg::Imu newest_imu;
   double latest_ekf_time;
-  nav_msgs::Odometry imu_prop_odom;
-  ros::Publisher pubImuPropOdom;
+  nav_msgs::msg::Odometry imu_prop_odom;
   double imu_time_offset = 0.0;
   double lidar_time_offset = 0.0;
 
@@ -120,7 +132,7 @@ public:
   double img_time_offset = 0.0;
   deque<PointCloudXYZI::Ptr> lid_raw_data_buffer;
   deque<double> lid_header_time_buffer;
-  deque<sensor_msgs::Imu::ConstPtr> imu_buffer;
+  deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu_buffer;
   deque<cv::Mat> img_buffer;
   deque<double> img_time_buffer;
   vector<pointWithVar> _pv_list;
@@ -149,39 +161,21 @@ public:
   StatesGroup _state;
   StatesGroup  state_propagat;
 
-  nav_msgs::Path path;
-  nav_msgs::Odometry odomAftMapped;
-  geometry_msgs::Quaternion geoQuat;
-  geometry_msgs::PoseStamped msg_body_pose;
+  nav_msgs::msg::Path path;
+  nav_msgs::msg::Odometry odomAftMapped;
+  geometry_msgs::msg::Quaternion geoQuat;
+  geometry_msgs::msg::PoseStamped msg_body_pose;
 
   PreprocessPtr p_pre;
   ImuProcessPtr p_imu;
   VoxelMapManagerPtr voxelmap_manager;
   VIOManagerPtr vio_manager;
 
-  ros::Publisher plane_pub;
-  ros::Publisher voxel_pub;
-  ros::Subscriber sub_pcl;
-  ros::Subscriber sub_imu;
-  ros::Subscriber sub_img;
-  ros::Publisher pubLaserCloudFullRes;
-  ros::Publisher pubNormal;
-  ros::Publisher pubSubVisualMap;
-  ros::Publisher pubLaserCloudEffect;
-  ros::Publisher pubLaserCloudMap;
-  ros::Publisher pubOdomAftMapped;
-  ros::Publisher pubPath;
-  ros::Publisher pubLaserCloudDyn;
-  ros::Publisher pubLaserCloudDynRmed;
-  ros::Publisher pubLaserCloudDynDbg;
-  image_transport::Publisher pubImage;
-  ros::Publisher mavros_pose_publisher;
-  ros::Timer imu_prop_timer;
+  fins::Node* fins_node;
 
   int frame_num = 0;
   double aver_time_consu = 0;
   double aver_time_icp = 0;
   double aver_time_map_inre = 0;
-  bool colmap_output_en = false;
 };
 #endif

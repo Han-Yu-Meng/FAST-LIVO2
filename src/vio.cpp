@@ -125,22 +125,6 @@ void VIOManager::initializeVIO()
     // cv::waitKey(1);
   }
 
-  if(colmap_output_en)
-  {
-    pinhole_cam = dynamic_cast<vk::PinholeCamera*>(cam);
-    fout_colmap.open(DEBUG_FILE_DIR("Colmap/sparse/0/images.txt"), ios::out);
-    fout_colmap << "# Image list with two lines of data per image:\n";
-    fout_colmap << "#   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME\n";
-    fout_colmap << "#   POINTS2D[] as (X, Y, POINT3D_ID)\n";
-    fout_camera.open(DEBUG_FILE_DIR("Colmap/sparse/0/cameras.txt"), ios::out);
-    fout_camera << "# Camera list with one line of data per camera:\n";
-    fout_camera << "#   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]\n";
-    fout_camera << "1 PINHOLE " << width << " " << height << " "
-        << std::fixed << std::setprecision(6)  // 控制浮点数精度为10位
-        << fx << " " << fy << " "
-        << cx << " " << cy << std::endl;
-    fout_camera.close();
-  }
   grid_num.resize(length);
   map_index.resize(length);
   map_dist.resize(length);
@@ -1590,7 +1574,6 @@ void VIOManager::updateState(cv::Mat img, int level)
 
       vector<float> P = visual_submap->warp_patch[i];
       double inv_ref_expo = visual_submap->inv_expo_list[i];
-      // ROS_ERROR("inv_ref_expo: %.3lf, state->inv_expo_time: %.3lf\n", inv_ref_expo, state->inv_expo_time);
 
       for (int x = 0; x < patch_size; x++)
       {
@@ -1684,7 +1667,6 @@ void VIOManager::updateState(cv::Mat img, int level)
 
     if (iteration == max_iterations || EKF_end) break;
   }
-  // if (state->inv_expo_time < 0.0)  {ROS_ERROR("reset expo time!!!!!!!!!!\n"); state->inv_expo_time = 0.0;}
 }
 
 void VIOManager::updateFrameState(StatesGroup state)
@@ -1828,8 +1810,6 @@ void VIOManager::processFrame(cv::Mat &img, vector<pointWithVar> &pg, const unor
   updateReferencePatch(feat_map);
 
   double t7 = omp_get_wtime();
-  
-  if(colmap_output_en)  dumpDataForColmap();
 
   frame_count++;
   ave_total = ave_total * (frame_count - 1) / frame_count + (t7 - t1 - (t5 - t4)) / frame_count;

@@ -48,7 +48,6 @@ struct Feature
   
   ~Feature()
   {
-    // ROS_WARN("The feature %d has been destructed.", id_);
     delete[] patch_;
   }
 };
