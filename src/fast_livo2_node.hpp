@@ -63,6 +63,7 @@ public:
 
   void on_lidar(const fins::Msg<sensor_msgs::msg::PointCloud2> &msg) {
     if (mapper_) {
+      logger->info("Received standard point cloud message with {} points.", msg.data->width * msg.data->height);
       mapper_->push_lidar(msg.data);
       mapper_->trigger();
     }
@@ -70,6 +71,7 @@ public:
 
   void on_livox(const fins::Msg<livox_ros_driver2::msg::CustomMsg> &msg) {
     if (mapper_) {
+      logger->info("Received Livox point cloud message with {} points.", msg.data->points.size());
       mapper_->push_livox(msg.data);
       mapper_->trigger();
     }
@@ -77,6 +79,12 @@ public:
 
   void on_imu(const fins::Msg<sensor_msgs::msg::Imu> &msg) {
     if (mapper_) {
+      static int imu_count = 0;
+      imu_count++;
+      if (imu_count % 100 == 0) {
+        logger->info("Received IMU message #{}.", imu_count);
+      }
+
       mapper_->push_imu(msg.data);
       mapper_->trigger();
     }
@@ -84,6 +92,7 @@ public:
 
   void on_image(const fins::Msg<sensor_msgs::msg::Image> &msg) {
     if (mapper_) {
+      logger->info("Received image message of size {}x{}.", msg.data->width, msg.data->height);
       mapper_->push_img(msg.data);
       mapper_->trigger();
     }

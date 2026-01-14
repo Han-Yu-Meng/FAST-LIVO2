@@ -4,6 +4,20 @@ project(fastlivo2)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
+
+add_compile_options(
+    -Wno-reorder
+    -Wno-unused-parameter
+    -Wno-unused-variable
+    -Wno-unused-but-set-variable
+    -Wno-sign-compare 
+    -Wno-deprecated-declarations
+    -Wno-comment
+    -Wno-switch
+    -Wno-maybe-uninitialized 
+)
+
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 find_package(OpenCV REQUIRED)

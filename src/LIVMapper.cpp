@@ -684,11 +684,22 @@ bool LIVMapper::sync_packages(LidarMeasureGroup &meas)
     if (meas.last_lio_update_time < 0.0) meas.last_lio_update_time = lid_header_time_buffer.front();
     if (!lidar_pushed)
     {
+      mtx_buffer.lock();
+      if (lid_raw_data_buffer.empty()) {
+          mtx_buffer.unlock();
+          return false;
+      }
       // If not push the lidar into measurement data buffer
       meas.lidar = lid_raw_data_buffer.front(); // push the first lidar topic
-      if (meas.lidar->points.size() <= 1) return false;
+
+      if (meas.lidar->points.size() <= 1) {
+          mtx_buffer.unlock();
+          return false;
+      }
 
       meas.lidar_frame_beg_time = lid_header_time_buffer.front();                                                // generate lidar_frame_beg_time
+      mtx_buffer.unlock();
+
       meas.lidar_frame_end_time = meas.lidar_frame_beg_time + meas.lidar->points.back().curvature / double(1000); // calc lidar scan end time
       meas.pcl_proc_cur = meas.lidar;
       lidar_pushed = true;                                                                                       // flag
