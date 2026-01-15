@@ -130,6 +130,7 @@ public:
   double plot_time;
   int frame_cnt;
   double img_time_offset = 0.0;
+
   deque<PointCloudXYZI::Ptr> lid_raw_data_buffer;
   deque<double> lid_header_time_buffer;
   deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu_buffer;
@@ -150,8 +151,6 @@ public:
   PointCloudXYZI::Ptr pcl_wait_pub;
   PointCloudXYZRGB::Ptr pcl_wait_save;
   PointCloudXYZI::Ptr pcl_wait_save_intensity;
-
-  ofstream fout_pre, fout_out, fout_visual_pos, fout_lidar_pos, fout_points;
 
   pcl::VoxelGrid<PointType> downSizeFilterSurf;
 

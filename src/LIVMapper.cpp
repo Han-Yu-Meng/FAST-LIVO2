@@ -231,9 +231,6 @@ void LIVMapper::stateEstimationAndMapping()
 void LIVMapper::handleVIO() 
 {
   euler_cur = RotMtoEuler(_state.rot_end);
-  fout_pre << std::setw(20) << LidarMeasures.last_lio_update_time - _first_lidar_time << " " << euler_cur.transpose() * 57.3 << " "
-            << _state.pos_end.transpose() << " " << _state.vel_end.transpose() << " " << _state.bias_g.transpose() << " "
-            << _state.bias_a.transpose() << " " << V3D(_state.inv_expo_time, 0, 0).transpose() << std::endl;
     
   if (pcl_w_wait_pub->empty() || (pcl_w_wait_pub == nullptr)) 
   {
@@ -275,20 +272,12 @@ void LIVMapper::handleVIO()
   // }
 
   publish_frame_world(vio_manager);
-
-  euler_cur = RotMtoEuler(_state.rot_end);
-  fout_out << std::setw(20) << LidarMeasures.last_lio_update_time - _first_lidar_time << " " << euler_cur.transpose() * 57.3 << " "
-            << _state.pos_end.transpose() << " " << _state.vel_end.transpose() << " " << _state.bias_g.transpose() << " "
-            << _state.bias_a.transpose() << " " << V3D(_state.inv_expo_time, 0, 0).transpose() << " " << feats_undistort->points.size() << std::endl;
 }
 
 void LIVMapper::handleLIO() 
 {    
   euler_cur = RotMtoEuler(_state.rot_end);
-  fout_pre << setw(20) << LidarMeasures.last_lio_update_time - _first_lidar_time << " " << euler_cur.transpose() * 57.3 << " "
-           << _state.pos_end.transpose() << " " << _state.vel_end.transpose() << " " << _state.bias_g.transpose() << " "
-           << _state.bias_a.transpose() << " " << V3D(_state.inv_expo_time, 0, 0).transpose() << endl;
-           
+
   if (feats_undistort->empty() || (feats_undistort == nullptr)) 
   {
     std::cout << "[ LIO ]: No point!!!" << std::endl;
@@ -551,7 +540,7 @@ void LIVMapper::livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::ConstShar
   if (abs(last_timestamp_imu - toSec(msg->header.stamp)) > 1.0 && !imu_buffer.empty())
   {
     double timediff_imu_wrt_lidar = last_timestamp_imu - toSec(msg->header.stamp);
-    printf("\033[95mSelf sync IMU and LiDAR, HARD time lag is %.10lf \n\033[0m", timediff_imu_wrt_lidar - 0.100);
+    fins_node->logger->warn("Self sync IMU and LiDAR, HARD time lag is {}", timediff_imu_wrt_lidar - 0.100);
   }
 
   double cur_head_time = toSec(msg->header.stamp);
@@ -588,7 +577,7 @@ void LIVMapper::imu_cbk(const sensor_msgs::msg::Imu::ConstSharedPtr &msg_in)
 
   if (fabs(last_timestamp_lidar - timestamp) > 0.5 && (!ros_driver_fix_en))
   {
-    std::cout << "\033[95m[ Warning ] IMU and LiDAR not synced! delta time: " << last_timestamp_lidar - timestamp << " \033[0m" << std::endl;
+    fins_node->logger->warn("IMU and LiDAR not synced! delta time: {}", last_timestamp_lidar - timestamp);
   }
 
   if (ros_driver_fix_en) timestamp += std::round(last_timestamp_lidar - timestamp);
@@ -684,22 +673,11 @@ bool LIVMapper::sync_packages(LidarMeasureGroup &meas)
     if (meas.last_lio_update_time < 0.0) meas.last_lio_update_time = lid_header_time_buffer.front();
     if (!lidar_pushed)
     {
-      mtx_buffer.lock();
-      if (lid_raw_data_buffer.empty()) {
-          mtx_buffer.unlock();
-          return false;
-      }
       // If not push the lidar into measurement data buffer
       meas.lidar = lid_raw_data_buffer.front(); // push the first lidar topic
-
-      if (meas.lidar->points.size() <= 1) {
-          mtx_buffer.unlock();
-          return false;
-      }
+      if (meas.lidar->points.size() <= 1) return false;
 
       meas.lidar_frame_beg_time = lid_header_time_buffer.front();                                                // generate lidar_frame_beg_time
-      mtx_buffer.unlock();
-
       meas.lidar_frame_end_time = meas.lidar_frame_beg_time + meas.lidar->points.back().curvature / double(1000); // calc lidar scan end time
       meas.pcl_proc_cur = meas.lidar;
       lidar_pushed = true;                                                                                       // flag

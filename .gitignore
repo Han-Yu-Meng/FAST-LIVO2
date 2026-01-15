@@ -1,3 +1,4 @@
 Log/*
 build/*
-git_diff_reporter.py
+*.py
+*.md

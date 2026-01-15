@@ -4,6 +4,8 @@
  * All rights reserved.
  ******************************************************************************/
 
+#include <atomic>
+#include <condition_variable>
 #include <fins/node.hpp>
 #include <memory>
 #include <mutex>
@@ -45,62 +47,90 @@ public:
     mapper_ = std::make_shared<LIVMapper>(this);
 
     is_running_ = true;
+    has_new_data_ = false;
+    mapping_thread_ = std::thread(&FastLIVONode::mapping_worker_loop, this);
 
-    logger->info("FastLIVO2 Node initialized.");
+    logger->info("FastLIVO2 Node initialized with independent mapping thread.");
   }
 
   void deinitialize() {
     is_running_ = false;
+    trigger_cv_.notify_all();
+
+    if (mapping_thread_.joinable()) {
+      mapping_thread_.join();
+    }
+
     mapper_.reset();
   }
 
   ~FastLIVONode() { deinitialize(); }
 
   void run() override {}
-
   void pause() override {}
   void reset() override {}
 
   void on_lidar(const fins::Msg<sensor_msgs::msg::PointCloud2> &msg) {
     if (mapper_) {
-      logger->info("Received standard point cloud message with {} points.", msg.data->width * msg.data->height);
+      FINS_TIME_BLOCK(logger, "Lidar Callback");
       mapper_->push_lidar(msg.data);
-      mapper_->trigger();
     }
   }
 
   void on_livox(const fins::Msg<livox_ros_driver2::msg::CustomMsg> &msg) {
     if (mapper_) {
-      logger->info("Received Livox point cloud message with {} points.", msg.data->points.size());
+      FINS_TIME_BLOCK(logger, "Livox Callback");
       mapper_->push_livox(msg.data);
-      mapper_->trigger();
     }
   }
 
   void on_imu(const fins::Msg<sensor_msgs::msg::Imu> &msg) {
     if (mapper_) {
-      static int imu_count = 0;
-      imu_count++;
-      if (imu_count % 100 == 0) {
-        logger->info("Received IMU message #{}.", imu_count);
-      }
-
+      FINS_TIME_BLOCK(logger, "IMU Callback");
       mapper_->push_imu(msg.data);
-      mapper_->trigger();
     }
   }
 
   void on_image(const fins::Msg<sensor_msgs::msg::Image> &msg) {
     if (mapper_) {
-      logger->info("Received image message of size {}x{}.", msg.data->width, msg.data->height);
+      FINS_TIME_BLOCK(logger, "Image Callback");
       mapper_->push_img(msg.data);
-      mapper_->trigger();
     }
   }
 
 private:
+  void notify_backend() {
+    {
+      std::lock_guard<std::mutex> lock(trigger_mtx_);
+      has_new_data_ = true;
+    }
+    trigger_cv_.notify_one();
+  }
+
+  void mapping_worker_loop() {
+    logger->info("Backend mapping worker started (Timer Mode).");
+
+    while (is_running_) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
+      if (!is_running_)
+        break;
+
+      if (mapper_) {
+        // FINS_TIME_BLOCK(logger, "LIVMapper Trigger");
+        mapper_->trigger();
+      }
+    }
+    logger->info("Backend mapping worker exiting.");
+  }
+
   std::shared_ptr<LIVMapper> mapper_;
-  bool is_running_ = false;
+
+  std::thread mapping_thread_;
+  std::mutex trigger_mtx_;
+  std::condition_variable trigger_cv_;
+  std::atomic<bool> is_running_{false};
+  bool has_new_data_{false};
 };
 
 EXPORT_NODE(FastLIVONode)
