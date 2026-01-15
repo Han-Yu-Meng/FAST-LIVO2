@@ -21,6 +21,8 @@ add_compile_options(
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 find_package(OpenCV REQUIRED)
+
+set(Sophus_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/sophus_lib/share/sophus/cmake")
 find_package(Sophus REQUIRED)
 find_package(OpenMP REQUIRED)
 
@@ -71,6 +73,7 @@ add_library(fastlivo2 SHARED
 )
 
 target_include_directories(fastlivo2 PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/sophus_lib/include"
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
     ${EIGEN3_INCLUDE_DIR}
@@ -79,13 +82,17 @@ target_include_directories(fastlivo2 PUBLIC
     ${Sophus_INCLUDE_DIRS}
 )
 
+set_target_properties(fastlivo2 PROPERTIES 
+    INSTALL_RPATH "${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/sophus_lib/lib"
+)
+
 target_link_libraries(fastlivo2 PRIVATE fins_sdk vikit)
 
 target_link_libraries(fastlivo2 PRIVATE
     OpenMP::OpenMP_CXX
-    Sophus::Sophus
     ${PCL_LIBRARIES}
     ${OpenCV_LIBRARIES}
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/sophus_lib/lib/libSophus.a"
 )
 
 if(TARGET sensor_msgs::sensor_msgs)

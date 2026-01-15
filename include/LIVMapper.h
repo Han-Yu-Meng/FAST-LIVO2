@@ -48,7 +48,6 @@ public:
   
   bool sync_packages(LidarMeasureGroup &meas);
   void prop_imu_once(StatesGroup &imu_prop_state, const double dt, V3D acc_avr, V3D angvel_avr);
-  // void imu_prop_callback(const ros::TimerEvent &e);
   void transformLidar(const Eigen::Matrix3d rot, const Eigen::Vector3d t, const PointCloudXYZI::Ptr &input_cloud, PointCloudXYZI::Ptr &trans_cloud);
   void pointBodyToWorld(const PointType &pi, PointType &po);
   void RGBpointBodyLidarToIMU(PointType const *const pi, PointType *const po);
@@ -130,12 +129,13 @@ public:
   double plot_time;
   int frame_cnt;
   double img_time_offset = 0.0;
-
+  
   deque<PointCloudXYZI::Ptr> lid_raw_data_buffer;
   deque<double> lid_header_time_buffer;
   deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu_buffer;
   deque<cv::Mat> img_buffer;
   deque<double> img_time_buffer;
+  
   vector<pointWithVar> _pv_list;
   vector<double> extrinT;
   vector<double> extrinR;
@@ -158,7 +158,7 @@ public:
 
   LidarMeasureGroup LidarMeasures;
   StatesGroup _state;
-  StatesGroup  state_propagat;
+  StatesGroup state_propagat;
 
   nav_msgs::msg::Path path;
   nav_msgs::msg::Odometry odomAftMapped;
