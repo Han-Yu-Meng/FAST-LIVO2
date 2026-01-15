@@ -279,22 +279,8 @@ void LIVMapper::handleLIO()
   voxelmap_manager->feats_down_size_ = feats_down_size;
     
   if (!lidar_map_inited) {
-    std::lock_guard<std::mutex> lock(map_init_mutex);
-    
-    // Double-check after acquiring lock
-    if (!lidar_map_inited) {
-      try {
-        voxelmap_manager->BuildVoxelMap();
-        
-        lidar_map_inited = true;
-      } catch (const std::exception& e) {
-        fins_node->logger->error("[handleLIO] ❌ Exception in BuildVoxelMap(): {}", e.what());
-        throw;
-      } catch (...) {
-        fins_node->logger->error("[handleLIO] ❌ Unknown exception in BuildVoxelMap()");
-        throw;
-      }
-    }
+    voxelmap_manager->BuildVoxelMap();
+    lidar_map_inited = true;
   }
 
   double t1 = omp_get_wtime();

@@ -18,11 +18,14 @@ add_compile_options(
     -Wno-maybe-uninitialized 
 )
 
+set(BUILD_SOPHUS_TESTS OFF CACHE BOOL "" FORCE)
+set(BUILD_SOPHUS_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(src/3rdparty/Sophus)
+add_subdirectory(src/3rdparty/rpg_vikit)
+
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 find_package(OpenCV REQUIRED)
-
-set(Sophus_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/sophus_lib/share/sophus/cmake")
 find_package(Sophus REQUIRED)
 find_package(OpenMP REQUIRED)
 
@@ -33,8 +36,6 @@ find_package(geometry_msgs QUIET)
 find_package(cv_bridge QUIET)
 find_package(livox_ros_driver2 QUIET)
 find_package(pcl_conversions QUIET)
-
-add_subdirectory(src/rpg_vikit)
 
 if(NOT MSVC)
     add_compile_options(-fexceptions -pthread)
@@ -73,17 +74,12 @@ add_library(fastlivo2 SHARED
 )
 
 target_include_directories(fastlivo2 PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/sophus_lib/include"
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/Sophus>
     ${EIGEN3_INCLUDE_DIR}
     ${PCL_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
-    ${Sophus_INCLUDE_DIRS}
-)
-
-set_target_properties(fastlivo2 PROPERTIES 
-    INSTALL_RPATH "${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/sophus_lib/lib"
 )
 
 target_link_libraries(fastlivo2 PRIVATE fins_sdk vikit)
@@ -92,7 +88,7 @@ target_link_libraries(fastlivo2 PRIVATE
     OpenMP::OpenMP_CXX
     ${PCL_LIBRARIES}
     ${OpenCV_LIBRARIES}
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/3rdparty/sophus_lib/lib/libSophus.a"
+    Sophus
 )
 
 if(TARGET sensor_msgs::sensor_msgs)

@@ -2,3 +2,5 @@ Log/*
 build/*
 *.py
 *.md
+
+src/3rdparty/Sophus/build/*
