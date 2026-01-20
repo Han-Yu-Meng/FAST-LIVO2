@@ -6,5 +6,19 @@ maintainers:
     email: "zhangji@cmu.edu"
   - name: "fins"
     email: "fins@sjtu.edu.cn"
+depends:
+  Eigen3: "3.4.0"
+  Sophus: "1.2.2"
+  OpenMP: "system"
+  
+  geometry_msgs: "system"
+  nav_msgs: "system"
+  sensor_msgs: "system"
+  cv_bridge: "system"
+  pcl_conversions: "system"
+  livox_ros_driver2: "system"
+
+  PCL: "system"
+  OpenCV: "system"
 licenses:
   - "BSD"
