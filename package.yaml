@@ -8,7 +8,7 @@ maintainers:
     email: "fins@sjtu.edu.cn"
 depends:
   Eigen3: "3.4.0"
-  Sophus: "1.2.2"
+  Sophus: "1.22.4"
   OpenMP: "system"
   
   geometry_msgs: "system"
@@ -16,9 +16,18 @@ depends:
   sensor_msgs: "system"
   cv_bridge: "system"
   pcl_conversions: "system"
-  livox_ros_driver2: "system"
+  livox_msg: "1.0.1"
 
   PCL: "system"
   OpenCV: "system"
+
+recipes:
+  livox_msg:
+    git: "https://github.com/Han-Yu-Meng/livox_msg.git"
+    build_system: "cmake"
+    versions:
+      "1.0.1":
+        tag: "v1.0.1"
+
 licenses:
   - "BSD"

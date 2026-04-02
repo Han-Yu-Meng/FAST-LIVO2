@@ -55,11 +55,11 @@ public:
 
   void push_imu(const sensor_msgs::msg::Imu::ConstSharedPtr& msg);
   void push_lidar(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg);
-  void push_livox(const livox_ros_driver2::msg::CustomMsg::ConstSharedPtr& msg);
+  void push_livox(const livox_driver2::msg::CustomMsg::ConstSharedPtr& msg);
   void push_img(const sensor_msgs::msg::Image::ConstSharedPtr& msg);
 
   void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg);
-  void livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::ConstSharedPtr &msg_in);
+  void livox_pcl_cbk(const livox_driver2::msg::CustomMsg::ConstSharedPtr &msg_in);
   void imu_cbk(const sensor_msgs::msg::Imu::ConstSharedPtr &msg_in);
   void img_cbk(const sensor_msgs::msg::Image::ConstSharedPtr &msg_in);
 

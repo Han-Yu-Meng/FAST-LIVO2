@@ -415,7 +415,7 @@ void LIVMapper::push_lidar(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& 
   standard_pcl_cbk(msg);
 }
 
-void LIVMapper::push_livox(const livox_ros_driver2::msg::CustomMsg::ConstSharedPtr& msg) {
+void LIVMapper::push_livox(const livox_driver2::msg::CustomMsg::ConstSharedPtr& msg) {
   livox_pcl_cbk(msg);
 }
 
@@ -510,11 +510,11 @@ void LIVMapper::RGBpointBodyLidarToIMU(PointType const *const pi, PointType *con
 }
 
 
-void LIVMapper::livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::ConstSharedPtr &msg_in)
+void LIVMapper::livox_pcl_cbk(const livox_driver2::msg::CustomMsg::ConstSharedPtr &msg_in)
 {
   if (!lidar_en) return;
   mtx_buffer.lock();
-  livox_ros_driver2::msg::CustomMsg::Ptr msg(new livox_ros_driver2::msg::CustomMsg(*msg_in));
+  livox_driver2::msg::CustomMsg::SharedPtr msg(new livox_driver2::msg::CustomMsg(*msg_in));
   if (abs(last_timestamp_imu - toSec(msg->header.stamp)) > 1.0 && !imu_buffer.empty())
   {
     double timediff_imu_wrt_lidar = last_timestamp_imu - toSec(msg->header.stamp);

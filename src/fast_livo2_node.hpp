@@ -27,7 +27,7 @@ public:
     set_description("Fast Direct LiDAR-Inertial-Visual Odometry (FINS Port)");
     set_category("SLAM");
 
-    register_input<0, livox_ros_driver2::msg::CustomMsg>(
+    register_input<0, livox_driver2::msg::CustomMsg>(
         "lidar", &FastLIVONode::on_livox);
 
     register_input<1, sensor_msgs::msg::Imu>("imu", &FastLIVONode::on_imu);
@@ -77,7 +77,7 @@ public:
     }
   }
 
-  void on_livox(const fins::Msg<livox_ros_driver2::msg::CustomMsg> &msg) {
+  void on_livox(const fins::Msg<livox_driver2::msg::CustomMsg> &msg) {
     if (mapper_) {
       // FINS_TIME_BLOCK(logger, "Livox Callback");
       mapper_->push_livox(msg.data);

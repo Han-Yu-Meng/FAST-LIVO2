@@ -28,6 +28,7 @@ find_package(PCL REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Sophus REQUIRED)
 find_package(OpenMP REQUIRED)
+find_package(livox_msg REQUIRED)
 
 if(NOT MSVC)
     add_compile_options(-fexceptions -pthread)
@@ -80,6 +81,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     ${OpenCV_LIBRARIES}
     Sophus
     vikit
+    livox_msg::livox_msg
 )
 
 fins_link_ros_dependencies(${PROJECT_NAME}
@@ -88,7 +90,6 @@ fins_link_ros_dependencies(${PROJECT_NAME}
     geometry_msgs
     cv_bridge
     pcl_conversions
-    livox_ros_driver2
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE ROOT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
