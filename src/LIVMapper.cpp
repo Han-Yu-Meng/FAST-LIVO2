@@ -864,7 +864,7 @@ void LIVMapper::publish_frame_world(VIOManagerPtr vio_manager)
     laserCloudmsg.header.stamp = data_time; 
     laserCloudmsg.header.frame_id = "camera_init"; 
     
-    fins_node->send<0>(laserCloudmsg, fins::now());
+    fins_node->send("cloud_registered", laserCloudmsg, fins::from_seconds(LidarMeasures.last_lio_update_time));
   } 
   // else {
   //   pcl::toROSMsg(*pcl_w_wait_pub, laserCloudmsg);
@@ -899,7 +899,7 @@ void LIVMapper::publish_tf()
   transform.transform.translation.z = _state.pos_end(2);
   transform.transform.rotation = geoQuat;
 
-  fins_node->send<3>(transform, fins::now());
+  fins_node->send("transform", transform, fins::from_seconds(LidarMeasures.last_lio_update_time));
 }
 
 void LIVMapper::publish_odometry()
@@ -909,7 +909,7 @@ void LIVMapper::publish_odometry()
   odomAftMapped.header.stamp = get_ros_time(LidarMeasures.last_lio_update_time);
   set_posestamp(odomAftMapped.pose.pose);
 
-  fins_node->send<2>(odomAftMapped, fins::now());
+  fins_node->send("odometry", odomAftMapped, fins::from_seconds(LidarMeasures.last_lio_update_time));
 }
 
 // void LIVMapper::publish_mavros()
@@ -926,5 +926,5 @@ void LIVMapper::publish_path()
   msg_body_pose.header.stamp = get_wall_time();
   msg_body_pose.header.frame_id = "camera_init";
   path.poses.push_back(msg_body_pose);
-  fins_node->send<1>(path, fins::now());
+  fins_node->send("path", path, fins::from_seconds(LidarMeasures.last_lio_update_time));
 }

@@ -27,18 +27,16 @@ public:
     set_description("Fast Direct LiDAR-Inertial-Visual Odometry (FINS Port)");
     set_category("SLAM");
 
-    register_input<0, livox_driver2::msg::CustomMsg>(
+    register_input<livox_driver2::msg::CustomMsg>(
         "lidar", &FastLIVONode::on_livox);
-
-    register_input<1, sensor_msgs::msg::Imu>("imu", &FastLIVONode::on_imu);
-
-    register_input<2, sensor_msgs::msg::Image>("image",
+    register_input<sensor_msgs::msg::Imu>("imu", &FastLIVONode::on_imu);
+    register_input<sensor_msgs::msg::Image>("image",
                                                &FastLIVONode::on_image);
 
-    register_output<0, sensor_msgs::msg::PointCloud2>("cloud_registered");
-    register_output<1, nav_msgs::msg::Path>("path");
-    register_output<2, nav_msgs::msg::Odometry>("odometry");
-    register_output<3, geometry_msgs::msg::TransformStamped>("transform");
+    register_output<sensor_msgs::msg::PointCloud2>("cloud_registered");
+    register_output<nav_msgs::msg::Path>("path");
+    register_output<nav_msgs::msg::Odometry>("odometry");
+    register_output<geometry_msgs::msg::TransformStamped>("transform");
   }
 
   void initialize() override {
@@ -74,6 +72,7 @@ public:
     if (mapper_) {
       // FINS_TIME_BLOCK(logger, "Lidar Callback");
       mapper_->push_lidar(msg.data);
+      notify_backend();
     }
   }
 
@@ -81,6 +80,7 @@ public:
     if (mapper_) {
       // FINS_TIME_BLOCK(logger, "Livox Callback");
       mapper_->push_livox(msg.data);
+      notify_backend();
     }
   }
 
@@ -88,6 +88,7 @@ public:
     if (mapper_) {
       // FINS_TIME_BLOCK(logger, "IMU Callback");
       mapper_->push_imu(msg.data);
+      notify_backend();
     }
   }
 
@@ -95,6 +96,7 @@ public:
     if (mapper_) {
       // FINS_TIME_BLOCK(logger, "Image Callback");
       mapper_->push_img(msg.data);
+      notify_backend();
     }
   }
 
@@ -108,10 +110,16 @@ private:
   }
 
   void mapping_worker_loop() {
-    logger->info("Backend mapping worker started (Timer Mode).");
+    logger->info("Backend mapping worker started (Trigger Mode).");
 
     while (is_running_) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      // 暂时改为轮询 20ms，后续可以改为条件变量等待
+      // std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      {
+        std::unique_lock<std::mutex> lock(trigger_mtx_);
+        trigger_cv_.wait(lock, [this] { return !is_running_ || has_new_data_; });
+        has_new_data_ = false;
+      }
 
       if (!is_running_)
         break;
