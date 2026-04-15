@@ -65,6 +65,11 @@ jobs:
         run: |
           source /opt/ros/humble/setup.bash
           sudo fins dep solve ${{ steps.pkg_info.outputs.PACKAGE_NAME }}
+          
+          pkill finsd || true
+          sleep 2
+          nohup finsd > /github/home/.fins/logs/finsd_build.log 2>&1 &
+          sleep 8
 
       - name: Build Plugins
         run: |
