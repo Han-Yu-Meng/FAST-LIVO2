@@ -84,9 +84,11 @@ jobs:
         run: |
           source /opt/ros/${{ matrix.distro }}/setup.bash
           fins build ${{ steps.pkg_info.outputs.PACKAGE_NAME }}
+          mkdir -p /github/home/artifacts
+          find /github/home/.fins/install/ -maxdepth 1 ! -path /github/home/.fins/install/ ! -name "lib" ! -name "agent" -exec cp -r {} /github/home/artifacts/ \;
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: fins-plugins-${{ matrix.os }}-${{ matrix.arch }}
-          path: /github/home/.fins/install/libremote_${{ steps.pkg_info.outputs.PACKAGE_NAME }}.so
+          path: /github/home/artifacts/
