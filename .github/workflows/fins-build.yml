@@ -127,9 +127,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: |
+      always() &&
       github.event_name == 'push' && 
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
-      needs.build.result == 'success'
+      !contains(needs.build.result, 'cancelled') &&
+      !contains(needs.build.result, 'skipped')
     permissions:
       contents: write
     steps:
