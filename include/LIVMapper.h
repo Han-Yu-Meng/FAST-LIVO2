@@ -16,7 +16,15 @@ which is included as part of this source code package.
 #include "IMU_Processing.h"
 #include "vio.h"
 #include "preprocess.h"
-#include <cv_bridge/cv_bridge.h>
+
+#if __has_include(<cv_bridge/cv_bridge.hpp>)
+    #include <cv_bridge/cv_bridge.hpp>
+#elif __has_include(<cv_bridge/cv_bridge.h>)
+    #include <cv_bridge/cv_bridge.h>
+#else
+    #error "cv_bridge header not found! Please install ros-<distro>-cv-bridge."
+#endif
+
 #include <nav_msgs/msg/path.hpp>
 #include <vikit/camera_loader.h>
 
