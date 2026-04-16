@@ -130,7 +130,7 @@ jobs:
       always() &&
       github.event_name == 'push' && 
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
-      (needs.build.result == 'success' || needs.build.result == 'failure')
+      (needs.build.result == 'success' || needs.build.result == 'failure' || needs.build.result == 'cancelled')
     permissions:
       contents: write
     steps:
@@ -162,7 +162,7 @@ jobs:
           body: |
             Automated build for commit ${{ github.sha }}
             Build results from GHA CI/CD.
-            *Note: This release may be a partial success.*
+            *Note: This release may be a partial success. Some platforms might have failed or timed out.*
           files: final-release/*
           draft: false
           prerelease: false
