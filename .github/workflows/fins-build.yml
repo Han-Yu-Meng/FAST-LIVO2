@@ -35,11 +35,25 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Fix Permissions for Cache
+        run: |
+          sudo chown -R $(id -u):$(id -g) .
+
       - name: Check for package.yaml
         run: |
           if [ ! -f "package.yaml" ]; then
             echo "Error: package.yaml not found. This repository might not be a valid FINS plugin. Exiting..."
             exit 1
+          fi
+
+      - name: Run Cppcheck
+        run: |
+          cppcheck --enable=all --inline-suppr --std=c++17 --output-file=cppcheck_report.txt src/
+          if [ -s cppcheck_report.txt ]; then
+            echo "Cppcheck found issues:"
+            cat cppcheck_report.txt
+          else
+            echo "No Cppcheck issues found."
           fi
 
       - name: Install Basic Tools
@@ -69,7 +83,7 @@ jobs:
           echo 'Acquire::ForceIPv4 "true";' >> /etc/apt/apt.conf.d/80-retries
           
           apt update -o Acquire::ForceIPv4=true --fix-missing
-          apt install -y --no-install-recommends curl git sudo jq ninja-build software-properties-common bc wget python3-yaml zip
+          apt install -y --no-install-recommends curl git sudo jq ninja-build software-properties-common bc wget python3-yaml zip cppcheck
 
       - name: Extract Package Name
         id: pkg_info
@@ -81,7 +95,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: apt-cache
-          key: apt-cache-${{ matrix.os }}-${{ matrix.arch }}-${{ hashFiles('**/package.yaml') }}
+          key: apt-cache-${{ matrix.os }}-${{ matrix.arch }}-${{ hashFiles('package.yaml') }}
           restore-keys: |
             apt-cache-${{ matrix.os }}-${{ matrix.arch }}-
 
@@ -92,6 +106,14 @@ jobs:
           path: /github/home/FineVision
           key: fins-sdk-v2-${{ matrix.os }}-${{ matrix.arch }}
 
+      - name: Cache Fins Dependencies
+        uses: actions/cache@v4
+        with:
+          path: /github/home/.fins/dependencies
+          key: fins-deps-${{ matrix.os }}-${{ matrix.arch }}-${{ hashFiles('package.yaml') }}
+          restore-keys: |
+            fins-deps-${{ matrix.os }}-${{ matrix.arch }}-
+
       - name: Install Fins-SDK
         if: steps.cache-fins-sdk.outputs.cache-hit != 'true'
         run: |
@@ -99,7 +121,9 @@ jobs:
 
       - name: Install Fins-CLI
         run: |
-          curl -fsSL https://raw.githubusercontent.com/Han-Yu-Meng/fins-cli/main/install.sh | sudo bash || true
+          for i in {1..5}; do
+            curl -fsSL --connect-timeout 5 --retry 3 https://raw.githubusercontent.com/Han-Yu-Meng/fins-cli/main/install.sh | sudo bash && break || sleep 5
+          done
           mkdir -p /github/home/.fins
           cp -r /root/.fins/* /github/home/.fins/ || true
 
@@ -114,7 +138,6 @@ jobs:
         run: |
           source /opt/ros/${{ matrix.distro }}/setup.bash
           
-          # 建立软链接，让系统的 apt 直接使用工作目录下的缓存
           mkdir -p apt-cache
           sudo rm -rf /var/cache/apt/archives
           sudo ln -s $(pwd)/apt-cache /var/cache/apt/archives
