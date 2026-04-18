@@ -19,7 +19,8 @@ depends:
   livox_msg: "1.0.1"
 
   PCL: "system"
-  OpenCV: "system"
+  # OpenCV: "system"
+  OpenCV: "4.7.0"
 
 recipes:
   livox_msg:

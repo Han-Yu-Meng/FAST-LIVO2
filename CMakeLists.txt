@@ -25,7 +25,7 @@ add_subdirectory(src/3rdparty/rpg_vikit)
 
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
-find_package(OpenCV REQUIRED)
+find_package(OpenCV 4.7.0 REQUIRED)
 find_package(Sophus REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(livox_msg REQUIRED)
@@ -88,7 +88,6 @@ fins_link_ros_dependencies(${PROJECT_NAME}
     sensor_msgs
     nav_msgs
     geometry_msgs
-    cv_bridge
     pcl_conversions
 )
 
