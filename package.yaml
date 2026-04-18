@@ -14,7 +14,6 @@ depends:
   geometry_msgs: "system"
   nav_msgs: "system"
   sensor_msgs: "system"
-  cv_bridge: "system"
   pcl_conversions: "system"
   livox_msg: "1.0.1"
 
