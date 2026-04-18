@@ -51,9 +51,21 @@ public:
     logger->info("FastLIVO2 Node initialized with independent mapping thread.");
   }
 
-  void deinitialize() {
+  void run() override {}
+
+  void pause() override {
     is_running_ = false;
+    
+    {
+      std::lock_guard<std::mutex> lock(trigger_mtx_);
+      has_new_data_ = true;
+    }
     trigger_cv_.notify_all();
+
+    if (mapper_) {
+      std::lock_guard<std::mutex> lock(mapper_->mtx_buffer);
+      mapper_->sig_buffer.notify_all();
+    }
 
     if (mapping_thread_.joinable()) {
       mapping_thread_.join();
@@ -62,11 +74,9 @@ public:
     mapper_.reset();
   }
 
-  ~FastLIVONode() { deinitialize(); }
-
-  void run() override {}
-  void pause() override {}
-  void reset() override {}
+  void reset() override {
+    pause();
+  }
 
   void on_lidar(const fins::Msg<sensor_msgs::msg::PointCloud2> &msg) {
     if (mapper_) {

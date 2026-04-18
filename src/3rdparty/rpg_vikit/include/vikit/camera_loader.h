@@ -31,8 +31,7 @@ inline bool loadFromFins(const std::string &ns, vk::AbstractCamera *&cam) {
   std::string cam_model = loader.load("cam_model", std::string(""));
 
   if (cam_model.empty()) {
-    FINS_LOG_ERROR("[CameraLoader] 'cam_model' not found in namespace: {}", ns);
-    return false;
+    cam_model = "Pinhole";
   }
 
   if (cam_model == "Ocam") {
