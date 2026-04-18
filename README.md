@@ -1,5 +1,7 @@
 # FAST-LIVO2 (Adapted to FINS Framework)
 
+Default config: [config/fins.yaml](config/fins.yaml)
+
 ## FAST-LIVO2: Fast, Direct LiDAR-Inertial-Visual Odometry
 
 ### 📢 News
