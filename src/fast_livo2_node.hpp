@@ -24,7 +24,7 @@ class FastLIVONode : public fins::Node {
 public:
   void define() override {
     set_name("FastLIVO2");
-    set_description("Fast Direct LiDAR-Inertial-Visual Odometry (FINS Port)");
+    set_description("LiDAR-inertial-visual fusion localization and mapping system");
     set_category("SLAM");
 
     register_input<livox_driver2::msg::CustomMsg>(
