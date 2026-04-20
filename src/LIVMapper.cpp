@@ -407,19 +407,19 @@ void LIVMapper::trigger()
   // fins_node->logger->info("[trigger] ========== END #{} ==========", trigger_count);
 }
 
-void LIVMapper::push_imu(const sensor_msgs::msg::Imu::ConstSharedPtr& msg) {
+void LIVMapper::push_imu(const sensor_msgs::msg::Imu::ConstSharedPtr& msg, const fins::AcqTime& acq_time) {
   imu_cbk(msg); 
 }
 
-void LIVMapper::push_lidar(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg) {
+void LIVMapper::push_lidar(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg, const fins::AcqTime& acq_time) {
   standard_pcl_cbk(msg);
 }
 
-void LIVMapper::push_livox(const livox_driver2::msg::CustomMsg::ConstSharedPtr& msg) {
-  livox_pcl_cbk(msg);
+void LIVMapper::push_livox(const livox_driver2::msg::CustomMsg::ConstSharedPtr& msg, const fins::AcqTime& acq_time) {
+  livox_pcl_cbk(msg, acq_time);
 }
 
-void LIVMapper::push_img(const sensor_msgs::msg::Image::ConstSharedPtr& msg) {
+void LIVMapper::push_img(const sensor_msgs::msg::Image::ConstSharedPtr& msg, const fins::AcqTime& acq_time) {
   img_cbk(msg);
 }
 
@@ -510,7 +510,7 @@ void LIVMapper::RGBpointBodyLidarToIMU(PointType const *const pi, PointType *con
 }
 
 
-void LIVMapper::livox_pcl_cbk(const livox_driver2::msg::CustomMsg::ConstSharedPtr &msg_in)
+void LIVMapper::livox_pcl_cbk(const livox_driver2::msg::CustomMsg::ConstSharedPtr &msg_in, const fins::AcqTime& acq_time)
 {
   if (!lidar_en) return;
   mtx_buffer.lock();
@@ -540,6 +540,7 @@ void LIVMapper::livox_pcl_cbk(const livox_driver2::msg::CustomMsg::ConstSharedPt
 
   mtx_buffer.unlock();
   sig_buffer.notify_all();
+  current_acq_time = acq_time;
 }
 
 void LIVMapper::imu_cbk(const sensor_msgs::msg::Imu::ConstSharedPtr &msg_in)
@@ -864,7 +865,7 @@ void LIVMapper::publish_frame_world(VIOManagerPtr vio_manager)
     laserCloudmsg.header.stamp = data_time; 
     laserCloudmsg.header.frame_id = "camera_init"; 
     
-    fins_node->send("cloud_registered", laserCloudmsg, fins::from_seconds(LidarMeasures.last_lio_update_time));
+    fins_node->send("cloud_registered", laserCloudmsg, current_acq_time);
   } 
   // else {
   //   pcl::toROSMsg(*pcl_w_wait_pub, laserCloudmsg);
@@ -899,7 +900,7 @@ void LIVMapper::publish_tf()
   transform.transform.translation.z = _state.pos_end(2);
   transform.transform.rotation = geoQuat;
 
-  fins_node->send("transform", transform, fins::from_seconds(LidarMeasures.last_lio_update_time));
+  fins_node->send("transform", transform, current_acq_time);
 }
 
 void LIVMapper::publish_odometry()
@@ -909,7 +910,7 @@ void LIVMapper::publish_odometry()
   odomAftMapped.header.stamp = get_ros_time(LidarMeasures.last_lio_update_time);
   set_posestamp(odomAftMapped.pose.pose);
 
-  fins_node->send("odometry", odomAftMapped, fins::from_seconds(LidarMeasures.last_lio_update_time));
+  fins_node->send("odometry", odomAftMapped, current_acq_time);
 }
 
 // void LIVMapper::publish_mavros()
@@ -926,5 +927,5 @@ void LIVMapper::publish_path()
   msg_body_pose.header.stamp = get_wall_time();
   msg_body_pose.header.frame_id = "camera_init";
   path.poses.push_back(msg_body_pose);
-  fins_node->send("path", path, fins::from_seconds(LidarMeasures.last_lio_update_time));
+  fins_node->send("path", path, current_acq_time);
 }

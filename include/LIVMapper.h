@@ -61,13 +61,13 @@ public:
   void RGBpointBodyLidarToIMU(PointType const *const pi, PointType *const po);
   void RGBpointBodyToWorld(PointType const *const pi, PointType *const po);
 
-  void push_imu(const sensor_msgs::msg::Imu::ConstSharedPtr& msg);
-  void push_lidar(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg);
-  void push_livox(const livox_driver2::msg::CustomMsg::ConstSharedPtr& msg);
-  void push_img(const sensor_msgs::msg::Image::ConstSharedPtr& msg);
+  void push_imu(const sensor_msgs::msg::Imu::ConstSharedPtr& msg, const fins::AcqTime& acq_time);
+  void push_lidar(const sensor_msgs::msg::PointCloud2::ConstSharedPtr& msg, const fins::AcqTime& acq_time);
+  void push_livox(const livox_driver2::msg::CustomMsg::ConstSharedPtr& msg, const fins::AcqTime& acq_time);
+  void push_img(const sensor_msgs::msg::Image::ConstSharedPtr& msg, const fins::AcqTime& acq_time);
 
   void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::ConstSharedPtr &msg);
-  void livox_pcl_cbk(const livox_driver2::msg::CustomMsg::ConstSharedPtr &msg_in);
+  void livox_pcl_cbk(const livox_driver2::msg::CustomMsg::ConstSharedPtr &msg_in, const fins::AcqTime& acq_time);
   void imu_cbk(const sensor_msgs::msg::Imu::ConstSharedPtr &msg_in);
   void img_cbk(const sensor_msgs::msg::Image::ConstSharedPtr &msg_in);
 
@@ -140,6 +140,7 @@ public:
   
   deque<PointCloudXYZI::Ptr> lid_raw_data_buffer;
   deque<double> lid_header_time_buffer;
+  deque<fins::AcqTime> lidar_acq_time_buffer;
   deque<sensor_msgs::msg::Imu::ConstSharedPtr> imu_buffer;
   deque<cv::Mat> img_buffer;
   deque<double> img_time_buffer;
@@ -179,6 +180,9 @@ public:
   VIOManagerPtr vio_manager;
 
   fins::Node* fins_node;
+
+  // Global acquisition time for current processed frame
+  fins::AcqTime current_acq_time;
 
   int frame_num = 0;
   double aver_time_consu = 0;

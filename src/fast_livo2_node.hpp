@@ -71,7 +71,7 @@ public:
   void on_lidar(const fins::Msg<sensor_msgs::msg::PointCloud2> &msg) {
     if (mapper_) {
       // FINS_TIME_BLOCK(logger, "Lidar Callback");
-      mapper_->push_lidar(msg.data);
+      mapper_->push_lidar(msg.data, msg.acq_time);
       notify_backend();
     }
   }
@@ -79,7 +79,7 @@ public:
   void on_livox(const fins::Msg<livox_driver2::msg::CustomMsg> &msg) {
     if (mapper_) {
       // FINS_TIME_BLOCK(logger, "Livox Callback");
-      mapper_->push_livox(msg.data);
+      mapper_->push_livox(msg.data, msg.acq_time);
       notify_backend();
     }
   }
@@ -87,7 +87,7 @@ public:
   void on_imu(const fins::Msg<sensor_msgs::msg::Imu> &msg) {
     if (mapper_) {
       // FINS_TIME_BLOCK(logger, "IMU Callback");
-      mapper_->push_imu(msg.data);
+      mapper_->push_imu(msg.data, msg.acq_time);
       notify_backend();
     }
   }
@@ -95,7 +95,7 @@ public:
   void on_image(const fins::Msg<sensor_msgs::msg::Image> &msg) {
     if (mapper_) {
       // FINS_TIME_BLOCK(logger, "Image Callback");
-      mapper_->push_img(msg.data);
+      mapper_->push_img(msg.data, msg.acq_time);
       notify_backend();
     }
   }

@@ -21,6 +21,7 @@ which is included as part of this source code package.
 #include <sophus/se3.h>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <fins/node.hpp>
 
 using namespace std;
 using namespace Eigen;
