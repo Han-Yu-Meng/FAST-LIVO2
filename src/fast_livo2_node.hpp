@@ -52,6 +52,7 @@ public:
   }
 
   void deinitialize() {
+    logger->info("Deinitializing FastLIVO2 Node...");
     is_running_ = false;
     trigger_cv_.notify_all();
 
