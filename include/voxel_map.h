@@ -25,7 +25,6 @@ which is included as part of this source code package.
 #include <unordered_map>
 
 #include <fins/node.hpp>
-#include <fins/agent/parameter_server.hpp>
 
 #define VOXELMAP_HASH_P 116101
 #define VOXELMAP_MAX_N 10000000000

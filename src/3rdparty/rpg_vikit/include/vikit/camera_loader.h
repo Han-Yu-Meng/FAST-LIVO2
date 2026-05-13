@@ -18,9 +18,6 @@
 #include <vikit/pinhole_camera.h>
 #include <vikit/polynomial_camera.h>
 
-#include <fins/agent/parameter_server.hpp>
-#include <fins/utils/logger.hpp>
-
 namespace vk {
 namespace camera_loader {
 

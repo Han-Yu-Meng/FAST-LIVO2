@@ -29,7 +29,6 @@ which is included as part of this source code package.
 #include <vikit/camera_loader.h>
 
 #include <fins/node.hpp>
-#include <fins/agent/parameter_server.hpp>
 
 class LIVMapper
 {
